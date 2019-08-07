@@ -13,9 +13,9 @@ search_term = input("Enter search term: ")
 
 # Consumer keys and access tokens, used for OAuth
 consumer_key = 'w63C4atArEWi9KE1ee9NtLgQw'
-consumer_secret = 'izmhkAR15QL3o3esVPZIasqLXUX485kWPmEN6UmUdHOj8rKrNy'
-access_token = '930535545918324736-LpC3If3mhmpPRmskxhXtcNG7Zd194Cg'
-access_token_secret = 'MBvOE88jsYpCmxtUxcxPLfRWVaCWggC1mxSmO6DU8Qeh9'
+consumer_secret = ''
+access_token = ''
+access_token_secret = ''
  
 # OAuth process, using the keys and tokens
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
