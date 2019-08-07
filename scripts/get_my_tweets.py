@@ -12,7 +12,7 @@ cwd = os.getcwd()
 search_term = input("Enter search term: ")
 
 # Consumer keys and access tokens, used for OAuth
-consumer_key = 'w63C4atArEWi9KE1ee9NtLgQw'
+consumer_key = ''
 consumer_secret = ''
 access_token = ''
 access_token_secret = ''
