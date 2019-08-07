@@ -1,0 +1,83 @@
+---
+title: "#tidytuesday"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+data(bob_ross)
+head(bob_ross)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+```{r}
+filter(bob_ross, tree == 1 & trees == 0)
+filter(bob_ross, tree == 1 & trees == 1)
+```
+```{r}
+nas <- anyNA(bob_ross)
+nas
+```
+
+```{r}
+arrange(bob_ross, desc(title))
+```
+
+```{r}
+clouds <- select(bob_ross, season, episode_num, clouds, cirrus, cumulus)
+colSums(clouds)
+```
+
+What is the distribution of features across paintings?
+
+```{r}
+df <- bob_ross
+inc <- c("PURPLE MOUNTAIN RANGE","COUNTRY CHARM","PEACEFUL REFLECTIONS")
+df <- df %>% filter(guest == 0 & !(title %in% inc))
+```
+```{r}
+# feature frequency with colSum
+x <- data.frame("number" = colSums(df[,5:71],dims=1))
+features <-rownames(x)
+x$feats <- features
+total_eps <- nrow(df)
+total_features <- sum(x$number)
+
+x$pct_eps <- x$number /total_eps * 100
+x$pct_ep_rd <- paste(round(x$pct_eps, 1),"")
+x$pct_ft <- x$number / total_features * 100
+x$pct_ft_rd <- paste(round(x$pct_ft, 1),"")
+```
+```{r}
+ggplot(data=filter(x, number>10), aes(x=reorder(feats,pct_eps), y=pct_eps, fill=pct_eps))+
+  geom_bar(stat="identity") +
+  geom_text(aes(x=feats, y=0, label=feats), position=position_dodge(0.75), vjust=0.5, hjust=1, size=1.75) + 
+  scale_fill_gradient(low="#1D70A2", high="#87007E") +
+  ylim(0,100) + xlab("") + ylab("") + 
+  coord_polar(theta="y") +
+  geom_text(aes(label=pct_ep_rd), size=2, color = "#C60F7B") +
+  theme(legend.position = "none", panel.grid = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), plot.title = element_text(family="sans", face="italic", size=11, color="#C60F7B", hjust=0.5)) + 
+  ggtitle("Feature frequency over all episodes (%)")
+```
+How are the features correlated?
+
+```{r}
+library(corrplot)
+top_feats <- x %>% filter(number>1) %>% arrange(-number)
+top <- top_feats$feats
+feat_df <- select_(df, .dots = top)
+cols <- sapply(feat_df, is.numeric)
+corr <- cor(feat_df[,cols])
+corrplot(corr, method="square",order="AOE",col=colorRampPalette(c("#87007E", "#000000", "#1D70A2"))(200),tl.cex = 0.45, tl.col = "#C60F7B")
+```
+
