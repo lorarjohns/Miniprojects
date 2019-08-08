@@ -125,10 +125,17 @@ for(i in 1:length(df$title)){
   res <- connect_features(xpos)
   temp <- rbind(temp, res)
 }
+```
+
+```{r}
+library(ggraph)
+library(igraph)
 
 weights <- count(temp, vars = c("feature1", "feature2"))
 colnames(weights)[3] <- "weight"
 
-View(weights)
+feat_graph <- graph_from_data_frame(weights)
+plot(feat_graph, vertex.shape="none", edge.arrow.size=.5, vertex.label.font=1.5, vertex.label.color="#1D70A2", vertex.label.cex=0.75, edge.color="#1D70A2", edge.width=E(weight))
+feat_graph
 ```
 

@@ -1,5 +1,9 @@
+# A script written for a friend
+# who needed a way to get tweets
+# with sentiment data, to use
+# for a time series analysis
+# to predict stock price changes.
 
-#python setup.py install
 import tweepy
 import numpy as np
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
