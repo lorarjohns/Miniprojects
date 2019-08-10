@@ -10,9 +10,12 @@ Created on Thu Aug  8 00:31:47 2019
 
 import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
 
 import pandas as pd
 #import textacy
+#from textacy import preprocessing
+
 import spacy
 # import time
 
@@ -54,13 +57,13 @@ class Jobs:
         
         for soup in self.get_next(iters):
             for job in soup.select("div.jobsearch-SerpJobCard"):
-                ti = job.select("div.title > a.jobtitle")
+                ti = job.select_one("div.title > a.jobtitle")
                 jobtitle.append(ti["title"])
-                co = job.select("span.company")
+                co = job.select_one("span.company")
                 company.append(co.text)
-                su = job.select("div.summary")
+                su = job.select_one("div.summary")
                 summary.append(su.text)
-                sal = job.select("div.salarySnippet")
+                sal = job.select_one("div.salarySnippet")
                 try:
                     salary.append(sal.span.text)
                 except:
@@ -85,7 +88,6 @@ class Jobs:
         return soups
     
     def get_js(self, url):
-        from selenium import webdriver
         options = webdriver.ChromeOptions()
         options.add_argument("headless")
         browser = webdriver.Chrome(options=options)
@@ -101,7 +103,6 @@ class NLP:
         self.ngrams = []
         
     def preprocess(self, text):
-        #from textacy import preprocessing
         #text = preprocessing.normalize_whitespace(preprocessing.remove_punct(text))
         doc = self.nlp(text)
         doc = [token for token in doc if not token.is_stop]
@@ -136,6 +137,6 @@ __name__ == "__main__"
 # <div class="jobsearch-SerpJobCard unifiedRow row result clickcard vjs-highlight" id="pj_9719f8c6eec624f2" data-jk="9719f8c6eec624f2" data-empn="9613973026691547" data-ci="108409095">
 
 
-n [20]: j = Jobs("https://www.indeed.com/jobs?q=data+scientist&l=New+York%2C+NY")
+#j = Jobs("https://www.indeed.com/jobs?q=data+scientist&l=New+York%2C+NY")
 
-j.get_all(2)
+#j.get_all(2)
