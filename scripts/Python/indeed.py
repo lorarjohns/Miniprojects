@@ -13,8 +13,8 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 import pandas as pd
-#import textacy
-#from textacy import preprocessing
+import textacy
+from textacy import preprocessing
 
 import spacy
 # import time
@@ -23,33 +23,33 @@ from sklearn import model_selection, preprocessing, linear_model, naive_bayes, m
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn import decomposition, ensemble
 
-#url = "https://www.indeed.com/jobs?q=data+scientist&l=New+York%2C+NY"
-#page = requests.get(url)
-#soup = BeautifulSoup(page.text, "html.parser")
-
-#print(soup.prettify)
-
 class Jobs:
     
-    def __init__(self, url):
+    def __init__(self, job):
         
         self.jobtitle = []
         self.company = []
         self.summary = []
         self.salary = []
-        self.url = url
+        self.url, self.max_iters = self.get_url(job)
         self.next_url = f"&start="
-    
-    #def __call__(self, **kwargs):
-    #   return self.soup
-   
-    def get_titles(self, iters):
-        for page in self.get_next(iters):
-            soup = self.soup
-            for tag in soup.select("div.title > a.jobtitle"):
-                self.jobs.append(tag["title"])
+       
+    def get_url(self, job):
+        job_str = "+".join([word for word in job.split()])
+        url = f'https://www.indeed.com/jobs?q="{job_str}"'
+        soup = self.get_js(url)
+        max_iters = int(soup.select_one("div#searchCount").text.split()[-2].replace(",",""))//10+1
+        
+        return url, max_iters
+        
                 
-    def get_all(self, iters):
+    def get_all(self, max_iters=True):
+        
+        if max_iters:
+            iters = self.max_iters
+        else:
+            iters = int(input("enter number of pages to fetch: "))
+            
         jobtitle = []
         company = []
         summary = []
@@ -88,6 +88,9 @@ class Jobs:
         return soups
     
     def get_js(self, url):
+        '''
+        Get webpage with dynamic js container
+        '''
         options = webdriver.ChromeOptions()
         options.add_argument("headless")
         browser = webdriver.Chrome(options=options)
@@ -98,15 +101,22 @@ class Jobs:
         
 class NLP:
     
-    def __init__(self, text):
+    def __init__(self):
         self.nlp = spacy.load("en_core_web_md")
         self.ngrams = []
-        
-    def preprocess(self, text):
-        #text = preprocessing.normalize_whitespace(preprocessing.remove_punct(text))
+       
+    def remove_punct(self, text):
+        return textacy.preprocessing.normalize_whitespace(textacy.preprocessing.remove_punct(text))
+    
+    def tokenize(self, text):
         doc = self.nlp(text)
         doc = [token for token in doc if not token.is_stop]
 
+        return doc
+    
+    def preprocess(self, text):
+        text = self.remove_punct(text)
+        doc = self.tokenize(text)
         return doc
         
     def ngrams(self, doc, n):
@@ -120,7 +130,7 @@ class NLP:
         X_train, X_test, y_train, y_test = model_selection.train_test_split(df["jobtitle"], df["summary"])
         le = preprocessing.LabelEncoder()
         y_train = le.fit_transform(y_train)
-        y_test = le.fit_transform(y)
+        y_test = le.fit_transform(y_test)
         
         return X_train, X_test, y_train, y_test
         

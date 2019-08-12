@@ -1,0 +1,104 @@
+---
+title: "K means cluster with Voronoi diagram"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(imager)
+library(magick)
+library(treemap)
+library(ggvoronoi)
+#library(here)
+
+im <- load.image("pic.jpg")
+
+plot(im, main="Original image")
+```
+
+```{r}
+df_size <- dim(im)[1]*dim(im)[2]
+max_row_num = 150000
+shrink_ratio <-if(df_size > max_row_num){max_row_num/df_size} else {1}
+
+im <- im %>% imresize(shrink_ratio)
+im_rgb <- im %>%
+  as.data.frame(wide="c") %>%
+  rename(red=c.1, green=c.2, blue=c.3) %>%
+  mutate(hexvalue=rgb(red,green,blue))
+
+im_gray <- im %>% 
+  grayscale() %>%
+  as.data.frame()
+
+im_df <- im_rgb %>%
+  inner_join(im_gray)
+
+head(im_df)
+```
+
+```{r}
+k <- 12
+kmeans_rgb <- kmeans(im_df %>% select(red,green,blue),
+                     centers=k)
+
+im_df$cluster_num <- kmeans_rgb$cluster
+
+head(im_df)
+```
+
+```{r}
+kmeans_ctr <- kmeans_rgb$centers %>% as.data.frame() %>%
+  mutate(group_hex = rgb(red,green,blue), cluster_num = row_number()) %>%
+  inner_join(im_df %>% count(cluster_num))
+
+kpalette <- kmeans_ctr$group_hex
+
+num_row <- floor(k/4)
+kmeans_ctr %>%
+  ggplot(aes(x=(cluster_num-1)%%num_row, y=floor((cluster_num-1)/num_row))) +
+  geom_tile(aes(fill=group_hex)) +
+  geom_label(aes(label=paste(cluster_num, ":", group_hex, "\n", n, "distinct hex values")), family = "Roboto Condensed", lineheight = 0.8) +
+  scale_fill_manual(values=sort(kmeans_ctr$group_hex), guide="none") +
+  theme_void(base_family = "Roboto Condensed") +
+  labs(subtitle = paste0("kmeans clustering center color with ", k, " clusters")) + scale_y_reverse()
+```
+
+```{r}
+im_df %>%
+  count(cluster_num, hexvalue) %>%
+  treemap(index = c("cluster_num", "hexvalue"),
+          type = "color",
+          vSize = "n",
+          vColor = "hexvalue",
+          algorithm = "squarified",
+          fontfamily.labels = "Roboto Condensed",
+          fontfamily.title = "Roboto Condensed",
+          border.col = c("#ffffff", "#ffffff50"),
+          fontsize.labels = c(24,0),
+          aspRatio = 16/9,
+          title = "RGB Clustering")
+```
+
+```{r}
+im_df_mini <- im_df %>%
+  sample_n(size = 1000, weight = (1-value))
+
+im_df_mini %>%
+  ggplot(aes(x=x, y=y)) +
+  geom_voronoi(aes(fill=hexvalue), color="#000000", size=0.1) +
+  scale_fill_manual(values = sort(unique(im_df_mini$hexvalue)), guide="none") +
+  theme_void() +
+  scale_y_reverse() +
+  coord_fixed()
+
+```
+
+```{r}
+library(plotly)
+im_df %>% sample_n(size = 2000) %>%
+  plot_ly(x = ~red, y = ~blue, z = ~green,
+          color = ~cluster_num, colors=kpalette, size=~value) %>%
+  add_markers()
+```
+
