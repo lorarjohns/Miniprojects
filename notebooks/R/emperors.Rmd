@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+
+emperors <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-13/emperors.csv")
+
+emperors <- emperors %>% select(c(index, reign_start, reign_end, birth, death), everything())
+emperors$name_full[[43]] <- "CAESAR MARCVS CLAVDIVS TACITVS AVGVSTVS"
+
+for (i in seq(8, 12)) {
+  emperors[[i]] <- factor(x = emperors[[i]], levels = unique(emperors[[i]]))
+}
+
+for (i in seq(13, 14)) {
+  emperors[[i]] <- factor(x = emperors[[i]], levels = unique(emperors[[i]]), ordered=TRUE)
+}
+
+emperors <- emperors %>% mutate(reign_start_year = as.numeric(substr(reign_start, 1, 4))) %>%
+  mutate(reign_end_year = as.numeric(substr(reign_end, 1, 4)))
+
+emperors$reign_start_year[1] = -emperors$reign_start_year[1]
+
+emperors <- emperors %>% 
+     arrange(reign_start_year, index) %>%
+     mutate(index, row_number())
+
+name_count <- function(name_col){
+  all_names <- unlist(strsplit(name_col, " ")) #  
+  freq_df = as.data.frame(table(all_names))
+  names(freq_df)[1] = "name_full"
+  return(freq_df)
+}
+
+freq_df <- name_count(emperors$name_full)
+
+#name_rank <- function(name_col){
+#  idx_count <- list()
+#  for (fname in name_col) {         
+#    fname <- unlist(strsplit(fname, " "))
+#    for (name in fname) {
+#      ix = which(fname == name)
+#      if (!(name %in% names(idx_count))) {
+#        idx_count[[name]] <- c(ix, 1)
+#      } else {
+#        if (ix %in% idx_count$name[1]) {
+#          idx_count$name[2][which(idx_count$name[1] == ix)] <- idx_count$name[2][which(idx_count$name[1] == ix)] + 1
+#        } else {
+#          idx_count$name[[1]] <- append(idx_count$name[[1]], ix)
+#          idx_count$name[2][which(idx_count$name[1] == ix)] <- 1}
+#      }
+#    }
+#  }  
+#  return(idx_count)
+#}
+
+#n <- name_rank(emperors$name_full)
+```
+
+```{r}
+killers <- emperors %>% group_by(killer) %>%
+     summarise(no = length(killer))
+
+emperors %>% group_by(cause) %>%
+     summarise(no = length(cause))
+```
+
+
+
