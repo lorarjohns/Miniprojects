@@ -13,8 +13,8 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 import pandas as pd
-import textacy
-from textacy import preprocessing
+#import textacy
+#from textacy import preprocessing
 
 import spacy
 # import time
@@ -135,8 +135,10 @@ class NLP:
         return X_train, X_test, y_train, y_test
         
             
-__name__ == "__main__"
-
+if __name__ == "__main__":
+    j = Jobs("Data Scientist")
+    df = j.get_all()
+    df.to_csv(path_or_buf="indeed.csv", index=False)
 
 # text = textacy.text_utils.KWIC(text, "language", window_width=35)
 

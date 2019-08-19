@@ -1,7 +1,7 @@
 miniprojects
 ==============================
 
-A collection of short projojects, challenges, tools, and one-offs, including #tidytuesday and scripts I've written to tease friends or make my life easier.
+A collection of short projects, challenges, tools, and one-offs, including #tidytuesday and scripts I've written to tease friends or make my life easier.
 
 
 --------
