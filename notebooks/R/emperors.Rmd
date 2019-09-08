@@ -5,6 +5,8 @@ output: html_notebook
 
 ```{r}
 library(tidyverse)
+library(ggimage)
+library(lubridate)
 
 emperors <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-13/emperors.csv")
 
@@ -18,6 +20,12 @@ for (i in seq(8, 12)) {
 for (i in seq(13, 14)) {
   emperors[[i]] <- factor(x = emperors[[i]], levels = unique(emperors[[i]]), ordered=TRUE)
 }
+bce = c("Augustus", "Claudius", "Tiberius", "Galba")
+
+years_asno <- emperors %>%
+  mutate_if(is.Date, list(year = year)) %>%
+  mutate(birth_year = if_else(name %in% bce, -birth_year, birth_year),
+         reign_start_year = if_else(name == "Augustus", -reign_start_year, reign_start_year))
 
 emperors <- emperors %>% mutate(reign_start_year = as.numeric(substr(reign_start, 1, 4))) %>%
   mutate(reign_end_year = as.numeric(substr(reign_end, 1, 4)))
@@ -66,7 +74,47 @@ killers <- emperors %>% group_by(killer) %>%
 
 emperors %>% group_by(cause) %>%
      summarise(no = length(cause))
+
+
 ```
 
 
+```{r}
+to_plot <- years_asno %>%
+  filter(!is.na(birth_year))
 
+by_dynasty <- to_plot %>%
+  group_by(dynasty) %>%
+  summarise(reign_start_year = min(reign_start_year),
+            reign_end_year = max(reign_end_year))
+
+big_pic <- ggplot(to_plot, aes(y=0)) +
+  geom_segment(aes(x=reign_start_year, xend=reign_end_year,
+                   yend=0)) +
+# scale_color_manual("Dynasty", values = roman_palette, breaks =  names(roman_palette)) +
+scale_x_continuous(breaks = c(-62, 0, 100, 200, 300, 400), labels = c("62 BC", "1 AD", "100 AD", "200 AD", "300 AD", "400 AD")) +
+# expand_limits()
+labs(x=NULL, y=NULL, caption="Roman Emperors")
+
+bars <- ggplot(to_plot, aes(y=reorder(name, reign_start_year)))
+   
+```
+
+
+write <- function(vector) {
+    for (book in vector) {
+        fileconn <- file(paste("book",toString(i),".txt"))
+        for (i in length(book)) {
+            writeLines(vector[i], fileconn)
+            }
+        close(fileconn)
+    }
+}
+
+booksvec <- list(philosophers_stone, chamber_of_secrets, prisoner_of_azkaban, goblet_of_fire, order_of_the_phoenix, half_blood_prince, deathly_hallows)
+
+writeBook <- function(book, num) {
+  fileconn <- file(paste("book",toString(num),".txt"))
+  writeLines(book, fileconn)
+  close(fileconn)
+    }
